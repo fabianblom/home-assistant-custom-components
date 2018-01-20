@@ -1,9 +1,7 @@
 # Home-Assistant Custom Components
 
-Some of my custom components for home-assistant. (http://www.home-assistant.io)
-
-Part of a small Proof of Concept, currently I am too lazy to integrate into upstream at the moment.
-Still learning to program in python3 and how to make home-assistant components.
+Forked from cyberjunky/home-assistant-custom-components
+Added some changes to toon.py to be compatible with the latest version of home assistant.
 
 ## Toon Thermostat climate component
 
