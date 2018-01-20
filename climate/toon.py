@@ -22,13 +22,13 @@ import homeassistant.helpers.config_validation as cv
 
 import requests
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Toon Thermostat'
 DEFAULT_TIMEOUT = 5
 BASE_URL = 'http://{0}:{1}{2}'
+
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE  )
 
 ATTR_MODE = 'mode'
 STATE_MANUAL = 'manual'
@@ -43,13 +43,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Toon thermostat."""
-    add_devices([ThermostatDevice(config.get(CONF_NAME), config.get(CONF_HOST),
+    """Setup the Toon thermostats."""
+
+    add_devices([Thermostat(config.get(CONF_NAME), config.get(CONF_HOST),
                             config.get(CONF_PORT))])
+
 
 # pylint: disable=abstract-method
 # pylint: disable=too-many-instance-attributes
-class ThermostatDevice(ClimateDevice):
+class Thermostat(ClimateDevice):
     """Representation of a Toon thermostat."""
 
     def __init__(self, name, host, port):
@@ -58,14 +60,19 @@ class ThermostatDevice(ClimateDevice):
         self._name = name
         self._host = host
         self._port = port
-        self._current_temp = None
-        self._current_setpoint = None
+        self._current_temp = 0
+        self._current_setpoint = 0
         self._current_state = -1
         self._current_operation = ''
-        self._set_state = None
+        self._set_state = 0
         self._operation_list = ['Comfort', 'Home', 'Sleep', 'Away', 'Holiday']
         _LOGGER.debug("Init called")
         self.update()
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return SUPPORT_FLAGS
 
     @staticmethod
     def do_api_request(url):
@@ -98,11 +105,6 @@ class ThermostatDevice(ClimateDevice):
         self._current_temp = int(self._data['currentTemp'])/100
         self._current_state = int(self._data['activeState'])
         _LOGGER.debug("Update called")
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
 
     @property
     def name(self):
@@ -160,11 +162,15 @@ class ThermostatDevice(ClimateDevice):
         elif operation_mode == "Holiday":
             mode = 4
 
+        program_active = 1
+        if mode == 3:
+            program_active = 0
+
         self._data = self.do_api_request(BASE_URL.format(
             self._host,
             self._port,
             '/happ_thermstat?action=changeSchemeState'
-            '&state=2&temperatureState='+str(mode)))
+            '&state=' + str(program_active) + '&temperatureState='+str(mode)))
         _LOGGER.debug("Set operation mode=%s(%s)", str(operation_mode),
                       str(mode))
 
