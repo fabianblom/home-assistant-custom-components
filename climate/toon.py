@@ -82,7 +82,7 @@ class Thermostat(ClimateDevice):
             _LOGGER.exception("Error doing API request")
         else:
             _LOGGER.debug("API request ok %d", req.status_code)
-
+        
         """Fixes invalid JSON output by TOON"""
         reqinvalid = req.text
         reqvalid = reqinvalid.replace('",}', '"}')
@@ -162,9 +162,15 @@ class Thermostat(ClimateDevice):
         elif operation_mode == "Holiday":
             mode = 4
 
-        program_active = 1
+        program_active = 2
         if mode == 3:
             program_active = 0
+        else:
+            self.do_api_request(BASE_URL.format(
+                self._host,
+                self._port,
+                '/happ_thermstat?action=changeSchemeState'
+                '&state=' + str(1)))
 
         self._data = self.do_api_request(BASE_URL.format(
             self._host,
